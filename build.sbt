@@ -2,9 +2,11 @@ name := "SBlend"
 
 version := "1.0"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.7"
 
-libraryDependencies += "org.scodec" % "scodec-core_2.10" % "1.7.1"
+libraryDependencies ++= Seq(
+  "org.scodec"  %% "scodec-core"  % "1.8.1"
+  )
 
 
 

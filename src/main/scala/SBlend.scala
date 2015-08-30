@@ -1,5 +1,6 @@
 import java.nio.charset.Charset
 
+import blender.Parser
 import scodec.bits.BitVector
 import scodec._
 import codecs._
@@ -12,6 +13,7 @@ import codecs._
  * https://github.com/scodec/scodec/blob/master/src/test/scala/scodec/examples/PcapExample.scala
  * http://www.atmind.nl/blender/mystery_ot_blend.html
  * https://github.com/ldo/blendhack/blob/master/blendfile.py
+ * http://mpilquist.github.io/blog/2013/06/09/scodec-part-3/
  */
 
 
@@ -23,19 +25,10 @@ object SBlend extends App{
 
   case class BlenderHeader(ordering: ByteOrdering)
 
-//  val pair = utf8 ~ uint8
-
-  override def main(args: Array[String]) {
-    def bits: BitVector = BitVector.fromMmap(new java.io.FileInputStream(new java.io.File(args(0))).getChannel)
-
-//    val enc = pair.encode(("Foo",42))
-//    val r = pair.decode(enc.toOption.get)
-    val charset = Charset.forName("UTF-8")
-    val blender = fixedSizeBytes[String](7,string(charset))
-    val b = blender.decode(bits)
-//    println(enc.)
-//    val u = uint32
-    val res =  bits(0)
+  override def main(args: Array[String]): Unit = {
+    val parser = new Parser
+    val blend = parser.Parse(args(0))
+    println(blend)
   }
 
 }
