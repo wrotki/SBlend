@@ -11,44 +11,55 @@ object BlenderCodecs {
   implicit val charSet: Charset = Charset.forName("UTF-8")
 
   case class FileHeader(
-                         //blender: String,
-                         pointerSize: String,
+                         pointerSize: Int,
                          endianness: String,
                          versionNumber: String
                          )
 
   implicit val fileHeader: Codec[FileHeader] = fixedSizeBytes(12, {
     ("blender" | fixedSizeBytes(7, ascii.unit("BLENDER"))) :~>:
-      //      ("blender" | fixedSizeBytes(7,string)) ::
-      ("pointerSize" | fixedSizeBytes(1, string)) ::
+      ("pointerSize" | fixedSizeBytes(1, int8)) ::
       ("endianness" | fixedSizeBytes(1, string)) ::
       ("versionNumber" | fixedSizeBytes(3, string))
   }).as[FileHeader]
 
   case class FileBlockHeader(
-                        code: String,
-                        size: Int,
-                        oldMemoryAddress: Int,
-                        sdnaIndex: Int,
-                        count: Int
-                        )
+                              code: String,
+                              size: Int,
+                              oldMemoryAddress: Int,
+                              sdnaIndex: Int,
+                              count: Int
+                              )
 
-  implicit val fileBlockHeader: Codec[FileBlockHeader] = {
-    ("code" | fixedSizeBytes(4,string)) >>:~ { implicit code =>
+  def fileBlockHeader(pointerSize: Int): Codec[FileBlockHeader] = {
+    ("code" | fixedSizeBytes(4, string)) ::
       ("size" | fixedSizeBytes(4, int32)) ::
-        ("oldMemoryAddress" | fixedSizeBytes(4, int32))
-    }}.as[FileBlockHeader]
+      ("oldMemoryAddress" | fixedSizeBytes(pointerSize, int32)) ::
+      ("sdnaIndex" | fixedSizeBytes(4, int32)) ::
+      ("count" | fixedSizeBytes(pointerSize, int32))
+  }.as[FileBlockHeader]
 
   case class FileBlockData(data: ByteVector)
 
+  def fileBlockData(size: Int) : Codec[FileBlockData]  = {
+    ("data" | bytes(size))
+  }.as[FileBlockData]
+
   case class FileBlock(
                         header: FileBlockHeader,
-                          data: FileBlockData
-                            )
-//  implicit val fileBlock: Codec[FileBlock] = {
-//    ("header" | fileBlockHeader) >>:~ { (hdr: FileBlockHeader) =>
-//      HList("data" | bytes(hdr.size)) }
-//  }.as[FileBlock]
+                        data: FileBlockData
+                        )
+
+  def fileBlock(pointerSize: Int) : Codec[FileBlock]  = {
+    ("header" | fileBlockHeader(pointerSize)) >>:~ { (hdr: FileBlockHeader) =>
+      ("data" | fileBlockData(hdr.size))
+    }
+  }.as[FileBlock]
+
+  //  implicit val fileBlock: Codec[FileBlock] = {
+  //    ("header" | fileBlockHeader) >>:~ { (hdr: FileBlockHeader) =>
+  //      HList("data" | bytes(hdr.size)) }
+  //  }.as[FileBlock]
 
   //  implicit def pcapRecord(implicit ordering: ByteOrdering) = {
   //    ("record_header"    | pcapRecordHeader                   ) >>:~ { hdr =>
