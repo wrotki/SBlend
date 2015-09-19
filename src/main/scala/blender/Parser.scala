@@ -4,7 +4,7 @@ import java.io.{File, FileInputStream}
 import java.nio.ByteBuffer
 import java.nio.channels.FileChannel
 
-import blender.BlenderCodecs.Blend
+import BlenderCodecs.Blend
 import scodec.{DecodeResult, Attempt, Codec}
 import scodec.bits._
 

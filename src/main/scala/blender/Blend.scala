@@ -4,7 +4,7 @@ import java.nio.charset.Charset
 import scodec.Codec
 import scodec.bits.ByteVector
 import scodec.codecs._
-import shapeless.HList
+import shapeless.{HNil, HList}
 
 object BlenderCodecs {
 
@@ -31,7 +31,7 @@ object BlenderCodecs {
                               count: Int
                               )
 
-  def fileBlockHeader(pointerSize: Int): Codec[FileBlockHeader] = {
+  implicit def fileBlockHeader(pointerSize: Int): Codec[FileBlockHeader] = {
     ("code" | fixedSizeBytes(4, string)) ::
       ("size" | fixedSizeBytes(4, int32)) ::
       ("oldMemoryAddress" | fixedSizeBytes(pointerSize, int32)) ::
@@ -41,7 +41,7 @@ object BlenderCodecs {
 
   case class FileBlockData(data: ByteVector)
 
-  def fileBlockData(size: Int) : Codec[FileBlockData]  = {
+  implicit def fileBlockData(size: Int) : Codec[FileBlockData]  = {
     ("data" | bytes(size))
   }.as[FileBlockData]
 
@@ -52,33 +52,20 @@ object BlenderCodecs {
 
   def fileBlock(pointerSize: Int) : Codec[FileBlock]  = {
     ("header" | fileBlockHeader(pointerSize)) >>:~ { (hdr: FileBlockHeader) =>
-      ("data" | fileBlockData(hdr.size))
+      ("data" | fileBlockData(hdr.size)).hlist
+
     }
   }.as[FileBlock]
-
-  //  implicit val fileBlock: Codec[FileBlock] = {
-  //    ("header" | fileBlockHeader) >>:~ { (hdr: FileBlockHeader) =>
-  //      HList("data" | bytes(hdr.size)) }
-  //  }.as[FileBlock]
-
-  //  implicit def pcapRecord(implicit ordering: ByteOrdering) = {
-  //    ("record_header"    | pcapRecordHeader                   ) >>:~ { hdr =>
-  //      ("record_data"      | bits(hdr.includedLength * 8) ).hlist
-  //    }}.as[PcapRecord]
 
   case class Blend(
                     fileHeader: FileHeader,
                     records: Vector[FileBlock]
-                    //                    dummy:String,
-                    //                    remainder: ByteVector
                     )
-
 
   implicit val blend: Codec[Blend] = {
 
     ("fileHeader" | fileHeader) >>:~ { (hdr: FileHeader) =>
-      ("dummy" | fixedSizeBytes(1, string)) ::
-        ("remainder" | bytes)
+      vector(fileBlock(4)).hlist
     }
   }.as[Blend]
 }
