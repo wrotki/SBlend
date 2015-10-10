@@ -1,7 +1,9 @@
+import java.io.{FileOutputStream, File, FileInputStream}
 import java.nio.charset.Charset
 
+import blender.BlenderCodecs.Blend
 import blender.Parser
-import scodec.bits.BitVector
+import scodec.bits.{ByteVector, BitVector}
 import scodec._
 import codecs._
 
@@ -27,8 +29,15 @@ object SBlend extends App{
 
   override def main(args: Array[String]): Unit = {
     val parser = new Parser
-    val blend = parser.Parse(args(0))
+    val blend = parser.Parse(args(0)).require.value
+    val sdna = blend.records filter { _.header.code == "DNA1"} head
+
+    //val b1 = blend flatMap { println }
     println(blend)
+    val sdnaBytes = sdna.data.data
+    val fo = new FileOutputStream(new File("./sdna"))
+    val sdnaReadable = sdnaBytes.copyToStream(fo)
+    println(sdna)
   }
 
 }
