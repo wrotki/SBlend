@@ -37,7 +37,13 @@ object SBlend extends App{
     val sdnaBytes = sdna.data.data
     val fo = new FileOutputStream(new File("./sdna"))
     val sdnaReadable = sdnaBytes.copyToStream(fo)
+
+
     println(sdna)
+
+    val foo = Seq(1,2,3)
+    foo reduce( _ + _)
+
   }
 
 }
