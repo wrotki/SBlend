@@ -49,7 +49,7 @@ object SDNA {
     implicit val structureDNA: Codec[StructureDNA] = {
       ("SDNA" | fixedSizeBytes(4, ascii.unit("SDNA"))) :~>:
         ("NAME" | fixedSizeBytes(4, ascii.unit("NAME"))) :~>:
-        ("names" | listOfN(fixedSizeBytes(2, int32L), cstring)) ::
+        ("names" | listOfN(fixedSizeBytes(4, int32L), cstring)) ::
         ("TYPE" | fixedSizeBytes(4, ascii.unit("TYPE"))) :~>:
         (
         ("numberOfTypes" | fixedSizeBytes(4, int32L)) flatPrepend { numberOfTypes =>
