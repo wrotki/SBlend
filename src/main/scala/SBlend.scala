@@ -6,6 +6,7 @@ import blender.SDNA.BlenderCodecs.StructureDNA
 import blender.{SDNA, Parser}
 import scodec.bits.{ByteVector, BitVector}
 import scodec._
+import shapeless._
 import codecs._
 
 /**
@@ -29,6 +30,13 @@ object SBlend extends App{
   case class BlenderHeader(ordering: ByteOrdering)
 
   override def main(args: Array[String]): Unit = {
+
+    val h: ::[Int, ::[String, ::[(String, Int), ::[Int, HNil]]]] = 1 :: "foo" :: ("bar",2) :: 3 :: HNil
+    val h0 = h(0)
+    val h1 = h(1)
+    val h2 = h(2)
+    println(h(2))
+
     val parser = new Parser
     val blend = parser.Parse(args(0)).require.value
     val sdna: FileBlock = blend.records filter { _.header.code == "DNA1"} head
@@ -41,9 +49,14 @@ object SBlend extends App{
 
     val bits = sdnaBytes.bits
     println(bits)
-    val  sdnaDecoded = Codec.decode[StructureDNA](bits)
-
+    val  sdnaDecoded = Codec.decode[StructureDNA](bits).require.value
     println(sdnaDecoded)
+
+    //println(sdnaDecoded.numberOfNames)
+    println(sdnaDecoded.names.length)
+    println(sdnaDecoded.types.length)
+    println(sdnaDecoded.lenghts.length)
+    println(sdnaDecoded.structureTypes.length)
   }
 
 }
