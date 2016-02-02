@@ -104,34 +104,25 @@ object SDNA {
     /** Structure
       *
       * @param name
-      * @param numberOfFields
-      * @param fieldType
-      * @param fieldName
       */
     case class Structure(
                           name: Int, // // each: Index in types containing the name of the structure
-                          numberOfFields: Int,
-                          fieldType: Int,
-                          fieldName: Int
+                          fields: List[Field]
                           )
 
-    implicit val structure: Codec[Structure] = fixedSizeBytes(8, {
-      ("name" | fixedSizeBytes(2, int16L)) ::
-        ("numberOfFields" | fixedSizeBytes(2, int16L)) ::
+    implicit val structure: Codec[Structure] =
+      (("name" | fixedSizeBytes(2, int16L)) ::
+        ("fields" | listOfN(fixedSizeBytes(2, int16L), field))
+        ).as[Structure]
+
+    case class Field (
+                       fieldType: Int,
+                       fieldName: Int
+                     )
+    implicit val field: Codec[Field] =
+      (
         ("fieldType" | fixedSizeBytes(2, int16L)) ::
         ("fieldName" | fixedSizeBytes(2, int16L))
-    }).as[Structure]
-
-
-    // http://mpilquist.github.io/blog/2013/06/01/scodec-part-2/
-    case class TypesStruct(
-                          numberOfTypes: Int,
-                          types: List[String],
-                          lengths: List[Int]
-                          )
-
-
-
-  }
-
+    ).as[Field]
+ }
 }
