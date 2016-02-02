@@ -18,7 +18,7 @@ object SDNA {
 
     implicit val charSet: Charset = Charset.forName("UTF-8")
 
-    /* private[codecs] final*/ class WordAlignedCodec[A](codec: Codec[A]) extends Codec[A] {
+    class WordAlignedCodec[A](codec: Codec[A]) extends Codec[A] {
 
       private def padAmount(size: Long) = {
         val mod = size % 32
@@ -55,7 +55,59 @@ object SDNA {
       override def toString = s"byteAligned($codec)"
     }
 
+    def wordAligned[A](codec: Codec[A]): Codec[A] = new WordAlignedCodec(codec)
 
+/*
+============================================================================
+*/
+
+    /**StructureDNA
+      *
+      * @param names
+      * @param numberOfTypes
+      * @param types
+      * @param lenghts
+      * @param structureTypes
+      */
+    case class StructureDNA(
+                             // SDNA // identifier: String,
+                             // NAME // nameIdentifier: String,
+                             //numberOfNames: Int,
+                             names: List[String],
+                             // TYPE // typeIdentifier: String,
+                             numberOfTypes: Int,
+                             types: List[String],
+                             // TLEN //
+                             lenghts: List[Int],
+                             // STRC //
+                             //numberOfStructures: Int,
+                             structureTypes: List[Structure]
+                             //oneStructureType: Structure
+                           )
+
+    val sdnaUnit = "SDNA" | fixedSizeBytes(4, ascii.unit("SDNA"))
+    val nameUnit = "NAME" | fixedSizeBytes(4, ascii.unit("NAME"))
+    val withCtx = "names" | listOfN(fixedSizeBytes(4, int32L), cstring)
+    val typeName = "TYPE" | fixedSizeBytes(4, ascii.unit("TYPE"))
+    val typesWithCtx = "types" | listOfN(fixedSizeBytes(4, int32L), cstring)
+    val strName = "STRC" | fixedSizeBytes(4, ascii.unit("STRC"))
+
+    val allTogetherWithoutTemps5 = sdnaUnit :~>: nameUnit :~>: wordAligned(withCtx) :: typeName :~>:   (
+      ("numberOfTypes" | fixedSizeBytes(4, int32L)) flatPrepend { numberOfTypes =>
+        ("types" | wordAligned(listOfN(provide(numberOfTypes), cstring))) ::
+          ("TLEN" | fixedSizeBytes(4, ascii.unit("TLEN"))) :~>:
+          ("lengths" | wordAligned(listOfN(provide(numberOfTypes), int16L))) ::
+          strName :~>: ("structures" | listOfN(fixedSizeBytes(4, int32L), structure))
+      })
+    implicit val structureDNA = allTogetherWithoutTemps5.as[StructureDNA]
+
+    /** Structure
+      *
+      * @param name
+      * @param numberOfFields
+      * @param fieldType
+      * @param fieldName
+      */
     case class Structure(
                           name: Int, // // each: Index in types containing the name of the structure
                           numberOfFields: Int,
@@ -78,51 +130,7 @@ object SDNA {
                           lengths: List[Int]
                           )
 
-    case class StructureDNA(
-                             // SDNA // identifier: String,
-                             // NAME // nameIdentifier: String,
-                             //numberOfNames: Int,
-                             names: List[String],
-                             // TYPE // typeIdentifier: String,
-                             numberOfTypes: Int,
-                             types: List[String],
-                             // TLEN //
-                             lenghts: List[Int],
-                             // STRC //
-                             //numberOfStructures: Int,
-                             structureTypes: List[Structure]
-                             //oneStructureType: Structure
-                           )
 
-    def wordAligned[A](codec: Codec[A]): Codec[A] = new WordAlignedCodec(codec)
-
-    val sdnaUnit = "SDNA" | fixedSizeBytes(4, ascii.unit("SDNA"))
-    val nameUnit = "NAME" | fixedSizeBytes(4, ascii.unit("NAME"))
-    val withCtx = "names" | listOfN(fixedSizeBytes(4, int32L), cstring)
-
-    val typeName = "TYPE" | fixedSizeBytes(4, ascii.unit("TYPE"))
-    val typesWithCtx = "types" | listOfN(fixedSizeBytes(4, int32L), cstring)
-    val strName = "STRC" | fixedSizeBytes(4, ascii.unit("STRC"))
-
-    val allTogetherWithoutTemps5 = sdnaUnit :~>: nameUnit :~>: wordAligned(withCtx) ::
-      typeName :~>:   (
-      ("numberOfTypes" | fixedSizeBytes(4, int32L)) flatPrepend { numberOfTypes =>
-        ("types" | wordAligned(listOfN(provide(numberOfTypes), cstring))) ::
-          ("TLEN" | fixedSizeBytes(4, ascii.unit("TLEN"))) :~>:
-          ("lengths" | wordAligned(listOfN(provide(numberOfTypes), int16L))) ::
-          strName :~>: ("structures" | listOfN(fixedSizeBytes(4, int32L), structure))
-      })
-
-
-    implicit val namesCodec = ("SDNA" | fixedSizeBytes(4, ascii.unit("SDNA"))) :~>:
-      ("NAME" | fixedSizeBytes(4, ascii.unit("NAME"))) :~>:
-      ("names" | listOfN(fixedSizeBytes(4, int32L), cstring))
-
-    implicit val alignedNamesCodec = wordAligned(namesCodec)
-    implicit val structureDNAList = wordAligned(namesCodec) ::
-    ("TYPE" | fixedSizeBytes(4, ascii.unit("TYPE"))) :~>:
-      ("numberOfTypes" | fixedSizeBytes(4, int32L))
-    implicit val structureDNA = allTogetherWithoutTemps5.as[StructureDNA]
 
   }
 
