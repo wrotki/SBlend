@@ -2,7 +2,7 @@ import java.io.{FileOutputStream, File, FileInputStream}
 import java.nio.charset.Charset
 
 import blender.BlenderCodecs.{FileBlock, Blend}
-import blender.SDNA.BlenderCodecs.StructureDNA
+import blender.SDNA.BlenderCodecs.{Structure, StructureDNA}
 import blender.{SDNA, Parser}
 import scodec.bits.{ByteVector, BitVector}
 import scodec._
@@ -57,6 +57,12 @@ object SBlend extends App{
     println(sdnaDecoded.types.length)
     println(sdnaDecoded.lenghts.length)
     println(sdnaDecoded.structureTypes.length)
+    println("----------------------")
+    val st: Structure = sdnaDecoded.structureTypes(0)
+    sdnaDecoded.structureTypes foreach { st =>
+      val std = (sdnaDecoded.names(st.name), st.numberOfFields)
+      println(std)
+    }
   }
 
 }

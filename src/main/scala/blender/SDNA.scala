@@ -78,28 +78,6 @@ object SDNA {
                           lengths: List[Int]
                           )
 
-
-//    implicit val typesCodec = ("numberOfTypes" | fixedSizeBytes(4, int32L)) flatPrepend { numberOfTypes =>
-//      ("types" | listOfN(provide(numberOfTypes), cstring)) ::
-//        ("TLEN" | new WordAlignedCodec(fixedSizeBytes(4, ascii.unit("TLEN")))) :~>:
-//        ("lengths" | listOfN(provide(numberOfTypes), int16L))
-//    }
-//
-//    val f = typesCodec
-//
-//    val typesStructAs: Codec[TypesStruct] = typesCodec.as[TypesStruct]
-//    var sd: shapeless.::[
-//      List[String],
-//      shapeless.::[
-//        shapeless.::[Int,
-//          shapeless.::[List[String],
-//            shapeless.::[
-//            List[Int],
-//              shapeless.HNil
-//          ]]],
-//        shapeless.::[blender.SDNA.BlenderCodecs.Structure,
-//          shapeless.HNil]]] //can be converted to/from blender.SDNA.BlenderCodecs.StructureDNA.
-
     case class StructureDNA(
                              // SDNA // identifier: String,
                              // NAME // nameIdentifier: String,
