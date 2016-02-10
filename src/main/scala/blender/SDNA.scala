@@ -47,6 +47,8 @@ object SDNA {
           println(res.remainder.size)
           val taken = b.size - res.remainder.size
           val pad = padAmount(taken)
+          println("\nPad")
+          println(pad)
           if (pad == 0) res
           else DecodeResult(res.value, res.remainder.drop(pad))
         }
@@ -110,6 +112,12 @@ object SDNA {
                           fields: List[Field]
                           )
 
+    implicit val field: Codec[Field] =
+      (
+        ("fieldType" | fixedSizeBytes(2, int16L)) ::
+          ("fieldName" | fixedSizeBytes(2, int16L))
+        ).as[Field]
+
     implicit val structure: Codec[Structure] =
       (("name" | fixedSizeBytes(2, int16L)) ::
         ("fields" | listOfN(fixedSizeBytes(2, int16L), field))
@@ -119,10 +127,5 @@ object SDNA {
                        fieldType: Int,
                        fieldName: Int
                      )
-    implicit val field: Codec[Field] =
-      (
-        ("fieldType" | fixedSizeBytes(2, int16L)) ::
-        ("fieldName" | fixedSizeBytes(2, int16L))
-    ).as[Field]
  }
 }
