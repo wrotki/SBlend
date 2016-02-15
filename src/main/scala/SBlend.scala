@@ -60,7 +60,7 @@ object SBlend extends App{
     println("----------------------")
     val st: Structure = sdnaDecoded.structureTypes(0)
     sdnaDecoded.structureTypes foreach { st =>
-      val std = (sdnaDecoded.names(st.name), st.fields)
+      val std = (sdnaDecoded.names(st.name), st.fields map { f => (sdnaDecoded.names(f.fieldName),sdnaDecoded.types(f.fieldType)) })
       println(std)
     }
   }
