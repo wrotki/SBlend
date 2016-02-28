@@ -76,8 +76,9 @@ object SBlend extends App{
 
     val sceneType = sdnaDecoded.structureTypes(scene.header.sdnaIndex)
     val sceneTypeName = sdnaDecoded.types(sceneType.name)
+    val len = sdnaDecoded.lenghts(sceneType.name)
 
-    println(s"SceneType: $sceneTypeName" )
+    println(s"SceneType: $sceneTypeName" + s"length: $len")
 
     sceneType.fields foreach {
       f => println("Field("+sdnaDecoded.names(f.fieldName)+":"+sdnaDecoded.types(f.fieldType)+")")
@@ -93,7 +94,8 @@ object SBlend extends App{
     val typeID = sdna.types.indexOf(typeName)
     val struct = sdna.structureTypes filter { _.name == typeID} head
 
-    println(s"StructType: $typeName" )
+    val len = sdna.lenghts(typeID)
+    println(s"StructType: $typeName" + s"length: $len")
 
     struct.fields foreach {
       f => println("Field("+sdna.names(f.fieldName)+":"+sdna.types(f.fieldType)+")")
