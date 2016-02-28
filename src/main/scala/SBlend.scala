@@ -55,13 +55,17 @@ object SBlend extends App{
     val  sdnaDecoded = Codec.decode[StructureDNA](bits).require.value
     println(sdnaDecoded)
 
-        val st: Structure = sdnaDecoded.structureTypes(0)
+        //val st: Structure = sdnaDecoded.structureTypes(0)
+
         sdnaDecoded.structureTypes foreach { st =>
           val std = (sdnaDecoded.names(st.name), st.fields map { f => (sdnaDecoded.names(f.fieldName),sdnaDecoded.types(f.fieldType)) })
           println(std)
         }
 
     val scene: FileBlock= blend.records filter { _.header.code.startsWith("SC")} head
+    val sceneBytes: ByteVector = scene.data.data
+        val fo = new FileOutputStream(new File("./scene"))
+        val sdnaReadable = sceneBytes.copyToStream(fo)
 
     //val b1 = blend flatMap { println }
     println(scene)
@@ -81,6 +85,20 @@ object SBlend extends App{
 
     println("----------------------")
 
+    printStructure(sdnaDecoded,"ID")
+
   }
 
+  def printStructure(sdna: StructureDNA, typeName: String): Unit = {
+    val typeID = sdna.types.indexOf(typeName)
+    val struct = sdna.structureTypes filter { _.name == typeID} head
+
+    println(s"StructType: $typeName" )
+
+    struct.fields foreach {
+      f => println("Field("+sdna.names(f.fieldName)+":"+sdna.types(f.fieldType)+")")
+    }
+
+    println("----------------------")
+  }
 }
