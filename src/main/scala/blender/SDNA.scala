@@ -42,13 +42,13 @@ object SDNA {
 
       def decode(b: BitVector) = {
         codec.decode(b) map { res =>
-          println("\nAligning")
-          println(b.size)
-          println(res.remainder.size)
+//          println("\nAligning")
+//          println(b.size)
+//          println(res.remainder.size)
           val taken = b.size - res.remainder.size
           val pad = padAmount(taken)
-          println("\nPad")
-          println(pad)
+//          println("\nPad")
+//          println(pad)
           if (pad == 0) res
           else DecodeResult(res.value, res.remainder.drop(pad))
         }

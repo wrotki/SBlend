@@ -31,38 +31,56 @@ object SBlend extends App{
 
   override def main(args: Array[String]): Unit = {
 
-    val h: ::[Int, ::[String, ::[(String, Int), ::[Int, HNil]]]] = 1 :: "foo" :: ("bar",2) :: 3 :: HNil
-    val h0 = h(0)
-    val h1 = h(1)
-    val h2 = h(2)
-    println(h(2))
+//    val h: ::[Int, ::[String, ::[(String, Int), ::[Int, HNil]]]] = 1 :: "foo" :: ("bar",2) :: 3 :: HNil
+//    val h0 = h(0)
+//    val h1 = h(1)
+//    val h2 = h(2)
+//    println(h(2))
 
     val parser = new Parser
     val blend = parser.Parse(args(0)).require.value
+
+    //blend.records filter {fb: FileBlock => fb.header.code != "DATA"} foreach { fb: FileBlock => println(fb.header.code)}
+
     val sdna: FileBlock = blend.records filter { _.header.code == "DNA1"} head
 
-    //val b1 = blend flatMap { println }
-    println(blend)
-    val sdnaBytes: ByteVector = sdna.data.data
-    val fo = new FileOutputStream(new File("./sdna"))
-    val sdnaReadable = sdnaBytes.copyToStream(fo)
 
+    val sdnaBytes: ByteVector = sdna.data.data
+//    val fo = new FileOutputStream(new File("./sdna"))
+//    val sdnaReadable = sdnaBytes.copyToStream(fo)
+//
     val bits = sdnaBytes.bits
-    println(bits)
+//    println(bits)
+
     val  sdnaDecoded = Codec.decode[StructureDNA](bits).require.value
     println(sdnaDecoded)
 
-    //println(sdnaDecoded.numberOfNames)
-    println(sdnaDecoded.names.length)
-    println(sdnaDecoded.types.length)
-    println(sdnaDecoded.lenghts.length)
-    println(sdnaDecoded.structureTypes.length)
+        val st: Structure = sdnaDecoded.structureTypes(0)
+        sdnaDecoded.structureTypes foreach { st =>
+          val std = (sdnaDecoded.names(st.name), st.fields map { f => (sdnaDecoded.names(f.fieldName),sdnaDecoded.types(f.fieldType)) })
+          println(std)
+        }
+
+    val scene: FileBlock= blend.records filter { _.header.code.startsWith("SC")} head
+
+    //val b1 = blend flatMap { println }
+    println(scene)
+
     println("----------------------")
-    val st: Structure = sdnaDecoded.structureTypes(0)
-    sdnaDecoded.structureTypes foreach { st =>
-      val std = (sdnaDecoded.names(st.name), st.fields map { f => (sdnaDecoded.names(f.fieldName),sdnaDecoded.types(f.fieldType)) })
-      println(std)
+    println("----------------------")
+    println("----------------------")
+
+    val sceneType = sdnaDecoded.structureTypes(scene.header.sdnaIndex)
+    val sceneTypeName = sdnaDecoded.types(sceneType.name)
+
+    println(s"SceneType: $sceneTypeName" )
+
+    sceneType.fields foreach {
+      f => println("Field("+sdnaDecoded.names(f.fieldName)+":"+sdnaDecoded.types(f.fieldType)+")")
     }
+
+    println("----------------------")
+
   }
 
 }
