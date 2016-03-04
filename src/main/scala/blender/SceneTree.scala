@@ -8,9 +8,19 @@ import collection.immutable.Stream
   * Created by mariusz on 2/28/16.
   */
 class SceneTree
+
 case class FileBlockField(name: String, typeName: String, length: Int, var offset: Int, structure: Option[Seq[FileBlockField]])
 
 case class TypeProperties (name: String, typeName: String, length: Int, offset: Int)
+
+case class Field(name: String, typeSpec: Type)
+
+case class Type(
+                 name: String,
+                 typeName: String,
+                 length: Int,
+                 offset: Int
+               )
 
 object Show {
   implicit def IntShow: Show[Int] = new Show[Int] { override def show(i: Int) = i.toString }
