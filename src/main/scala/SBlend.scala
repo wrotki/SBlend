@@ -88,32 +88,32 @@ object SBlend extends App {
     println("----------------------")
     println("----------------------")
 
-    val sceneType = sdnaDecoded.structureTypes(scene.header.sdnaIndex)
-    val sceneTypeName = sdnaDecoded.types(sceneType.name)
-    val len = sdnaDecoded.lenghts(sceneType.name)
-
-    println(s"SceneType: $sceneTypeName" + s" length: $len")
-
-    sceneType.fields foreach {
-      f => println("Field(" + sdnaDecoded.names(f.fieldName) + ":" + sdnaDecoded.types(f.fieldType) + ") length: " + sdnaDecoded.lenghts(f.fieldType))
-    }
-
-    println("----------------------")
-    val typeTable = sceneType.fields map {
-      f =>
-        TypeProperties(
-          sdnaDecoded.names(f.fieldName),
-          sdnaDecoded.types(f.fieldType),
-          sdnaDecoded.lenghts(f.fieldType),
-          0
-        )
-    }
-    println(typeTable)
-    println("----------------------")
-
-    //printStructure(sdnaDecoded,"ID")
-
-    println(transformStructure(sdnaDecoded, "scene", "Scene"))
+//    val sceneType = sdnaDecoded.structureTypes(scene.header.sdnaIndex)
+//    val sceneTypeName = sdnaDecoded.types(sceneType.name)
+//    val len = sdnaDecoded.lenghts(sceneType.name)
+//
+//    println(s"SceneType: $sceneTypeName" + s" length: $len")
+//
+//    sceneType.fields foreach {
+//      f => println("Field(" + sdnaDecoded.names(f.fieldName) + ":" + sdnaDecoded.types(f.fieldType) + ") length: " + sdnaDecoded.lenghts(f.fieldType))
+//    }
+//
+//    println("----------------------")
+//    val typeTable = sceneType.fields map {
+//      f =>
+//        TypeProperties(
+//          sdnaDecoded.names(f.fieldName),
+//          sdnaDecoded.types(f.fieldType),
+//          sdnaDecoded.lenghts(f.fieldType),
+//          0
+//        )
+//    }
+//    println(typeTable)
+//    println("----------------------")
+//
+//    //printStructure(sdnaDecoded,"ID")
+//
+    println(blender.Field(sdnaDecoded, "scene", "Scene"))
     println("----------------------")
 
     import blender.Show._
@@ -139,44 +139,6 @@ object SBlend extends App {
     println("----------------------")
   }
 
-  def transformStructure(sdna: StructureDNA, fieldName: String, typeName: String): Tree[TypeProperties] = {
-    if (typeName == "void") {
-      return TypeProperties(fieldName,"void",0,0).leaf
-    }
-    val typeID = sdna.types.indexOf(typeName)
-
-    val struct: Option[Structure] = sdna.structureTypes filter {
-      _.name == typeID
-    } headOption
-
-    if (struct.isEmpty) {
-      return TypeProperties(fieldName,typeName,0,0).leaf
-    }
-    val subForest = struct.get.fields map {
-      f => transformStructure(sdna,sdna.names(f.fieldName), sdna.types(f.fieldType))
-    } toStream
-    val root =
-    Tree.Node(
-      TypeProperties(fieldName,typeName,0,0),
-      subForest
-    )
-    root
-    //    val subFields = struct map { s =>
-    //      s.fields map {
-    //        f => FileBlockField(sdna.names(f.fieldName),sdna.types(f.fieldType),sdna.lenghts(f.fieldType),0,
-    //          if ( sdna.names(f.fieldName).startsWith("*")) { Seq() } else { transformStructure(sdna,sdna.types(f.fieldType))} )
-    //      }
-    //    }
-    //sdna.lenghts(typeID)
-
-
-    //    val seqFields = struct.fields map {
-    //      f => FileBlockField(sdna.names(f.fieldName),sdna.types(f.fieldType),sdna.lenghts(f.fieldType),0,
-    //        if ( sdna.names(f.fieldName).startsWith("*")) { Seq() } else { transformStructure(sdna,sdna.types(f.fieldType))} )
-    //    }
-    //    seqFields
-    //Seq()
-  }
 
 
 }
