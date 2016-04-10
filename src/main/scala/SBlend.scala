@@ -25,6 +25,18 @@ import scalaz.Show
   * http://mpilquist.github.io/blog/2013/06/09/scodec-part-3/
   */
 
+/*
+val path = "/Users/mariusz/projects/SBlend/resources/zombie.blend"
+val args = Array(path)
+import blender.BlenderCodecs.Blend
+import blender.SDNA.BlenderCodecs.StructureDNA
+val (blend: Blend, sdnaDecoded: StructureDNA) = SBlend.getSDNA(args)
+import blender.TypeResolver
+val tr = new TypeResolver
+val typeMap = tr.createStructMap(sdnaDecoded)
+typeMap foreach { case (k,v) => println(s"Key: $k") }
+
+ */
 
 object SBlend extends App {
 
@@ -45,6 +57,74 @@ object SBlend extends App {
     //    val h2 = h(2)
     //    println(h(2))
 
+    val (blend: Blend, sdnaDecoded: StructureDNA) = getSDNA(args)
+
+    import blender.TypeResolver
+
+    val typeMap = TypeResolver.createStructMap(sdnaDecoded)
+    typeMap foreach { case (k,v) => println(s"Type: $k Fields: $v") }
+    println(TypeResolver.fieldLength("id","ID",typeMap))
+//    println(sdnaDecoded)
+
+    //val st: Structure = sdnaDecoded.structureTypes(0)
+
+//    sdnaDecoded.structureTypes foreach { st =>
+//      val std = (sdnaDecoded.names(st.name), st.fields map { f => (sdnaDecoded.names(f.fieldName), sdnaDecoded.types(f.fieldType)) })
+//      println(std)
+//    }
+//    printScene(blend, typeMap)
+//    println("----------------------")
+//
+//    import blender.Show._
+//    println(SceneTree.typeTree.drawTree)
+  }
+
+  private def printScene(blend: Blend, typeMap: Map[String,Type]): Unit = {
+    //    val sceneType = sdnaDecoded.structureTypes(scene.header.sdnaIndex)
+    //    val sceneTypeName = sdnaDecoded.types(sceneType.name)
+    //    val len = sdnaDecoded.lenghts(sceneType.name)
+    //
+    //    println(s"SceneType: $sceneTypeName" + s" length: $len")
+    //
+    //    sceneType.fields foreach {
+    //      f => println("Field(" + sdnaDecoded.names(f.fieldName) + ":" + sdnaDecoded.types(f.fieldType) + ") length: " + sdnaDecoded.lenghts(f.fieldType))
+    //    }
+    //
+    //    println("----------------------")
+    //    val typeTable = sceneType.fields map {
+    //      f =>
+    //        TypeProperties(
+    //          sdnaDecoded.names(f.fieldName),
+    //          sdnaDecoded.types(f.fieldType),
+    //          sdnaDecoded.lenghts(f.fieldType),
+    //          0
+    //        )
+    //    }
+    //    println(typeTable)
+    //    println("----------------------")
+    //
+    //    //printStructure(sdnaDecoded,"ID")
+    //
+    //    println(blender.Field(sdnaDecoded, "scene", "Scene"))
+    //    println("----------------------")
+
+
+
+    val scene: FileBlock = blend.records filter {
+      _.header.code.startsWith("SC")
+    } head
+    val sceneBytes: ByteVector = scene.data.data
+    val fo = new FileOutputStream(new File("./scene"))
+    val sdnaReadable = sceneBytes.copyToStream(fo)
+
+    //val b1 = blend flatMap { println }
+    //println(scene)
+
+    println("----------------------")
+    println("----------------------")
+  }
+
+  def getSDNA(args: Array[String]): (Blend, StructureDNA) = {
     val parser = new Parser
     val blend = parser.Parse(args(0)).require.value
 
@@ -65,60 +145,7 @@ object SBlend extends App {
     //    println(bits)
 
     val sdnaDecoded = Codec.decode[StructureDNA](bits).require.value
-    println(sdnaDecoded)
-
-    //val st: Structure = sdnaDecoded.structureTypes(0)
-
-    sdnaDecoded.structureTypes foreach { st =>
-      val std = (sdnaDecoded.names(st.name), st.fields map { f => (sdnaDecoded.names(f.fieldName), sdnaDecoded.types(f.fieldType)) })
-      println(std)
-    }
-
-    val scene: FileBlock = blend.records filter {
-      _.header.code.startsWith("SC")
-    } head
-    val sceneBytes: ByteVector = scene.data.data
-    val fo = new FileOutputStream(new File("./scene"))
-    val sdnaReadable = sceneBytes.copyToStream(fo)
-
-    //val b1 = blend flatMap { println }
-    println(scene)
-
-    println("----------------------")
-    println("----------------------")
-    println("----------------------")
-
-//    val sceneType = sdnaDecoded.structureTypes(scene.header.sdnaIndex)
-//    val sceneTypeName = sdnaDecoded.types(sceneType.name)
-//    val len = sdnaDecoded.lenghts(sceneType.name)
-//
-//    println(s"SceneType: $sceneTypeName" + s" length: $len")
-//
-//    sceneType.fields foreach {
-//      f => println("Field(" + sdnaDecoded.names(f.fieldName) + ":" + sdnaDecoded.types(f.fieldType) + ") length: " + sdnaDecoded.lenghts(f.fieldType))
-//    }
-//
-//    println("----------------------")
-//    val typeTable = sceneType.fields map {
-//      f =>
-//        TypeProperties(
-//          sdnaDecoded.names(f.fieldName),
-//          sdnaDecoded.types(f.fieldType),
-//          sdnaDecoded.lenghts(f.fieldType),
-//          0
-//        )
-//    }
-//    println(typeTable)
-//    println("----------------------")
-//
-//    //printStructure(sdnaDecoded,"ID")
-//
-    println(blender.Field(sdnaDecoded, "scene", "Scene"))
-    println("----------------------")
-
-    import blender.Show._
-    println(SceneTree.typeTree.drawTree)
-
+    (blend, sdnaDecoded)
   }
 
   def printStructure(sdna: StructureDNA, typeName: String): Unit = {
