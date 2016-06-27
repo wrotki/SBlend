@@ -62,8 +62,12 @@ object SBlend extends App {
     import blender.TypeResolver
 
     val typeMap = TypeResolver.createStructMap(sdnaDecoded)
-    typeMap foreach { case (k,v) => println(s"Type: $k Fields: $v") }
+    typeMap filterKeys { _ == "ID" } foreach { case (k,v) => println(s"Type: $k Fields: $v") }
+    // ----------------
+
     println(TypeResolver.fieldLength("id","ID",typeMap))
+
+
 //    println(sdnaDecoded)
 
     //val st: Structure = sdnaDecoded.structureTypes(0)

@@ -35,11 +35,25 @@ object TypeResolver {
   }
 
   def fieldLength(fieldName: String, fieldType: String, typeMap: Map[String,Type]) : Seq[Int] = {
-
+    val arrayP = ".*\\[([0-9]+)\\]".r
     val lengths = fieldName match {
-      case l if l startsWith("*") =>
-        Seq(4)
+      case p if p startsWith("*") =>
+        Seq(4) // TODO: take into account pointer length
+      case arrayP(len) =>
+        Seq(len toInt) // TODO: take into account the type of array element
       case _ =>
+        val lghts = for {
+          sType <- typeMap get fieldType
+        } yield sType
+        if (lghts.isEmpty) {
+          return Seq(fieldType match {
+            case "void" => 0
+            case "char" => 1
+            case "short" => 2
+            case "int" => 4
+            case "long" => 8
+          })
+        }
         val structType = typeMap get fieldType
         val fields = structType flatMap { t => Some(t.fields) }
         val lenghts = fields flatMap { fs =>
@@ -51,21 +65,21 @@ object TypeResolver {
     lengths
   }
 
-  def fieldLengthFor(fieldName: String, fieldType: String, typeMap: Map[String,Type]) : Seq[Int] = {
-
-    val lengths = fieldName match {
-      case l if l endsWith("*") =>
-        Seq(4)
-      case _ =>
-        val structType = typeMap get fieldType
-        val fields = structType flatMap { t => Some(t.fields) }
-        val lenghts = fields flatMap { fs =>
-          val ret = fs flatMap { f => fieldLengthFor(f.id,f.typeRef,typeMap) }
-          Some(ret)
-        }
-        lenghts getOrElse(Seq())
-    }
-    lengths
+  def fieldLengthFor(fieldName: String, fieldType: String, typeMap: Map[String, Type]): Seq[Int] = {
+    Seq(0)
+//    val lengths = fieldName match {
+//      case l if l startsWith ("*") =>
+//        Seq(4)
+//      case _ =>
+//        val res2 = for {
+//          structType <- typeMap get fieldType
+//          fields <- Some(structType.fields)
+//          field <- fields
+//          length <- fieldLengthFor(field.id, field.typeRef, typeMap)
+//        } yield length
+//        res2
+//    }
+//    lengths toSeq
   }
 }
 
