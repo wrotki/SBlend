@@ -54,18 +54,71 @@ object TypeResolver {
             case "long" => 8
           })
         }
-        val structType = typeMap get fieldType
-        val fields = structType flatMap { t => Some(t.fields) }
-        val lenghts = fields flatMap { fs =>
-          val ret = fs flatMap { f => fieldLength(f.id,f.typeRef,typeMap) }
-          Some(ret)
-        }
-        lenghts getOrElse(Seq())
+//  http://debasishg.blogspot.com/2011/07/monad-transformers-in-scala.html
+        // http://blog.originate.com/blog/2013/10/21/reader-monad-for-dependency-injection/
+        // http://eed3si9n.com/herding-cats/Combined+Pages.html
+        // https://inoio.de/blog/2016/02/12/type-class-101-monadtransformer/
+        //
+        //  Type():
+        //    Seq(Option[Type])
+
+
+        val lengths = for {
+          structType <- typeMap get fieldType
+        } yield for {
+          f <- structType.fields
+        } yield fieldLength(f.id,f.typeRef,typeMap)
+
+        lengths getOrElse(Seq(Seq())) flatten
+
+
+//        val structType: Option[Type] = typeMap get fieldType
+//        val fields: Option[Seq[FieldDef]] = structType flatMap { t => Some(t.fields) }
+//        val lenghts = fields flatMap { fs =>
+//          val ret = fs flatMap { f => fieldLength(f.id,f.typeRef,typeMap) }
+//          Some(ret)
+//        }
+//        lenghts getOrElse(Seq())
+
+
+        // http://blog.sigfpe.com/2006/05/grok-haskell-monad-transformers.html
+//        val lghtscr = (typeMap get fieldType).map { case structType => structType }
+//        val lghtscr5 = for {
+//          structType <- typeMap get fieldType
+//        } yield structType
+//
+//          val lghtsc3 = for {
+//          structType <- typeMap get fieldType
+//          fs <- structType.fields
+//          r <- fieldLength(fs.id,fs.typeRef,typeMap)
+//        } yield r
+
+
+        //        val lghtsc = for {
+//          structType <- typeMap get fieldType
+//          fs <- structType.fields
+//          r <- fieldLength(fs.id,fs.typeRef,typeMap)
+//        } yield r
+
+        //lghtsc toSeq
+        Seq(0)
+
+
+//        val structType = typeMap get fieldType
+//        val fields = structType flatMap { t => Some(t.fields) }
+//        val lenghts = fields flatMap { fs =>
+//          val ret = fs flatMap { f => fieldLength(f.id,f.typeRef,typeMap) }
+//          Some(ret)
+//        }
+//        lenghts getOrElse(Seq())
     }
     lengths
   }
 
   def fieldLengthFor(fieldName: String, fieldType: String, typeMap: Map[String, Type]): Seq[Int] = {
+
+    (0 to 10).map { case i => i }
+
     Seq(0)
 //    val lengths = fieldName match {
 //      case l if l startsWith ("*") =>

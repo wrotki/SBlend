@@ -4,6 +4,7 @@ import java.nio.charset.Charset
 import blender.BlenderCodecs.{FileBlock, Blend}
 import blender.SDNA.BlenderCodecs.{Field, Structure, StructureDNA}
 import blender._
+import playground.{UnderscoreEx, ReaderTOptionExample}
 import scodec.bits.{ByteVector, BitVector}
 import scodec._
 import shapeless._
@@ -51,6 +52,15 @@ object SBlend extends App {
 
   override def main(args: Array[String]): Unit = {
 
+    //UnderscoreEx.runex
+
+    /*
+    Uncomment below to get back toBlender conversion
+     */
+    loadBlendFile(args)
+  }
+
+  def loadBlendFile(args: Array[String]): Unit = {
     //    val h: ::[Int, ::[String, ::[(String, Int), ::[Int, HNil]]]] = 1 :: "foo" :: ("bar",2) :: 3 :: HNil
     //    val h0 = h(0)
     //    val h1 = h(1)
@@ -62,25 +72,27 @@ object SBlend extends App {
     import blender.TypeResolver
 
     val typeMap = TypeResolver.createStructMap(sdnaDecoded)
-    typeMap filterKeys { _ == "ID" } foreach { case (k,v) => println(s"Type: $k Fields: $v") }
+    typeMap filterKeys {
+      _ == "ID"
+    } foreach { case (k, v) => println(s"Type: $k Fields: $v") }
     // ----------------
 
-    println(TypeResolver.fieldLength("id","ID",typeMap))
+    println(TypeResolver.fieldLength("id", "ID", typeMap))
 
 
-//    println(sdnaDecoded)
+    //    println(sdnaDecoded)
 
     //val st: Structure = sdnaDecoded.structureTypes(0)
 
-//    sdnaDecoded.structureTypes foreach { st =>
-//      val std = (sdnaDecoded.names(st.name), st.fields map { f => (sdnaDecoded.names(f.fieldName), sdnaDecoded.types(f.fieldType)) })
-//      println(std)
-//    }
-//    printScene(blend, typeMap)
-//    println("----------------------")
-//
-//    import blender.Show._
-//    println(SceneTree.typeTree.drawTree)
+    //    sdnaDecoded.structureTypes foreach { st =>
+    //      val std = (sdnaDecoded.names(st.name), st.fields map { f => (sdnaDecoded.names(f.fieldName), sdnaDecoded.types(f.fieldType)) })
+    //      println(std)
+    //    }
+    //    printScene(blend, typeMap)
+    //    println("----------------------")
+    //
+    //    import blender.Show._
+    //    println(SceneTree.typeTree.drawTree)
   }
 
   private def printScene(blend: Blend, typeMap: Map[String,Type]): Unit = {
