@@ -2,6 +2,7 @@ package blender
 
 import blender.SDNA.BlenderCodecs.{Structure, StructureDNA}
 
+import scala.Option
 import scalaz._
 import Scalaz._
 
@@ -62,16 +63,16 @@ object TypeResolver {
         //  Type():
         //    Seq(Option[Type])
 
-
         val lengths = for {
-          structType <- typeMap get fieldType
-        } yield for {
-          f <- structType.fields
+          f <- ListT(typeMap get fieldType map { _.fields toList })
         } yield fieldLength(f.id,f.typeRef,typeMap)
 
-        lengths getOrElse(Seq(Seq())) flatten
-
-
+        val resOpt = lengths.run
+        val res = resOpt match {
+          case Some(l) => l flatten
+          case _ => List()
+        }
+        res toSeq
 //        val structType: Option[Type] = typeMap get fieldType
 //        val fields: Option[Seq[FieldDef]] = structType flatMap { t => Some(t.fields) }
 //        val lenghts = fields flatMap { fs =>
