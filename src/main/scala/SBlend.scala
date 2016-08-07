@@ -74,6 +74,7 @@ object SBlend extends App {
     val typeMap = TypeResolver.createStructMap(sdnaDecoded)
     typeMap filterKeys {
       _ == "ID"
+      //_ == "Scene"
     } foreach { case (k, v) => println(s"Type: $k Fields: $v") }
     // ----------------
 
