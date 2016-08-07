@@ -79,8 +79,14 @@ object SBlend extends App {
     // ----------------
 
    // println(TypeResolver.fieldLength("", "id", "ID", typeMap))
-    println(TypeResolver.fieldLength("", "sc", "Scene", typeMap))
+    val lengths = TypeResolver.fieldLength("", "sc", "Scene", typeMap)
+    println(lengths)
 
+//    def offsets(input: Seq[Int]): Seq(Int) = {
+//
+//    }
+    val offsets = (lengths map { _.length }).scanLeft(0)(_ + _)
+    println(offsets)
 
     //    println(sdnaDecoded)
 
