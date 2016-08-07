@@ -78,7 +78,8 @@ object SBlend extends App {
     } foreach { case (k, v) => println(s"Type: $k Fields: $v") }
     // ----------------
 
-    println(TypeResolver.fieldLength("id", "ID", typeMap))
+   // println(TypeResolver.fieldLength("", "id", "ID", typeMap))
+    println(TypeResolver.fieldLength("", "sc", "Scene", typeMap))
 
 
     //    println(sdnaDecoded)

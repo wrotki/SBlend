@@ -8,6 +8,7 @@ import Scalaz._
 
 case class Type(name: String,fields: Seq[FieldDef])
 case class FieldDef(id: String,typeRef: String)
+case class FieldLength(id: String,typeRef: String, length:Int)
 
 
 object TypeResolver {
@@ -35,24 +36,25 @@ object TypeResolver {
     }
   }
 
-  def fieldLength(fieldName: String, fieldType: String, typeMap: Map[String,Type]) : Seq[Int] = {
+  def fieldLength(pathSoFar: String, fieldName: String, fieldType: String, typeMap: Map[String,Type]) : Seq[FieldLength] = {
     val arrayP = ".*\\[([0-9]+)\\]".r
     val lengths = fieldName match {
       case p if p startsWith("*") =>
-        Seq(4) // TODO: take into account pointer length
+        Seq(FieldLength(fieldName,fieldType,4)) // TODO: take into account pointer length
       case arrayP(len) =>
-        Seq(len toInt) // TODO: take into account the type of array element
+        Seq(FieldLength(fieldName,fieldType,len toInt)) // TODO: take into account the type of array element
       case _ =>
         val lghts = for {
           sType <- typeMap get fieldType
         } yield sType
         if (lghts.isEmpty) {
           return Seq(fieldType match {
-            case "void" => 0
-            case "char" => 1
-            case "short" => 2
-            case "int" => 4
-            case "long" => 8
+            case "void" => FieldLength(fieldName,fieldType,0)
+            case "char" => FieldLength(fieldName,fieldType,1)
+            case "short" => FieldLength(fieldName,fieldType,2)
+            case "int" => FieldLength(fieldName,fieldType,4)
+            case "long" => FieldLength(fieldName,fieldType,8)
+            case "float" => FieldLength(fieldName,fieldType,8) // TODO: verify
           })
         }
         //  http://debasishg.blogspot.com/2011/07/monad-transformers-in-scala.html
@@ -65,7 +67,7 @@ object TypeResolver {
 
         val lengths = for {
           f <- ListT(typeMap get fieldType map { _.fields toList })
-        } yield fieldLength(f.id,f.typeRef,typeMap)
+        } yield fieldLength(pathSoFar+f.id,f.id,f.typeRef,typeMap)
 
         val resOpt = lengths.run
         val res = resOpt match {
