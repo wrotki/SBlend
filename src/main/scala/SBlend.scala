@@ -33,5 +33,6 @@ object SBlend extends App {
   override def main(args: Array[String]): Unit = {
 
     val model = Model.loadBlendFile(args)
+    model.printScene
   }
 }

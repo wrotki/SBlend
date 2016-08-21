@@ -1,15 +1,91 @@
 package blender
 
 import java.io.{File, FileOutputStream}
+import java.nio.charset.Charset
 
 import blender.BlenderCodecs.{FileBlock, Blend}
 import blender.SDNA.BlenderCodecs.StructureDNA
 import scodec.Codec
 import scodec.bits.ByteVector
+import scodec.codecs._
+import shapeless.{HNil, HList}
+
+case class Model(blend: Blend, typeMap: Map[String, Type],heap: Map[Int, FileBlock]) {
+
+  implicit val charSet: Charset = Charset.forName("UTF-8")
+
+  private val intCodec = ("int" | fixedSizeBytes(4, int32L)).hlist
+  private val shortCodec = ("short" | fixedSizeBytes(2, int16L)).hlist
+
+  val sceneCodec = intCodec :: intCodec :: intCodec :: intCodec ::
+    fixedSizeBytes(24, string) :: shortCodec :: shortCodec :: intCodec ::
+    intCodec /* *camera */ :: intCodec
+
+  def printScene: Unit = {
+
+    val scene: FileBlock = blend.records filter {
+      //_.header.code.startsWith("SC")
+      _.header.sdnaIndex == 140
+    } head
+    val sceneBytes: ByteVector = scene.data.data
+    val fo = new FileOutputStream(new File("./scene"))
+    val sdnaReadable = sceneBytes.copyToStream(fo)
+    val fbh = scene.header
+    println(s"Scene FileBlockHeader: $fbh")
+
+    // println(TypeResolver.fieldLength("", "id", "ID", typeMap))
+    val lengths: Seq[FieldLength] = TypeResolver.fieldLength("", "sc", "Scene", typeMap)
+
+    lengths map { l => println(l.id,l.typeRef,l.length) }
 
 
-case class Model(blend: Blend, sdnaDecoded: StructureDNA,heap: Map[Int, FileBlock]) {
 
+    //println(lengths map {_.length})
+
+    //    def offsets(input: Seq[Int]): Seq(Int) = {
+    //
+    //    }
+    val offsets = (lengths map { _.length }).scanLeft(0)(_ + _)
+    //println(offsets)
+
+
+    //val b1 = blend flatMap { println }
+    //println(scene)
+
+    println("----------------------")
+    println("----------------------")
+
+    val pointers = sceneCodec.decode(scene.data.data.toBitVector)
+    println ("Pointers: "+ pointers)
+  }
+
+  /**
+    *
+    *
+    * Unimportant stuff
+    *
+    *
+    */
+
+  private def printCameraBytes: Unit = {
+
+    // Camera: *Object: 0336c480  -    (minus ) 138933992 (0x847F6E8)
+    //    val cam0: FileBlock = heap(138933992)
+    val cam0: FileBlock = heap(0x0336c480)
+
+    val camera: FileBlock = blend.records filter {
+      //_.header.code.startsWith("SC")
+      _.header.sdnaIndex == 30
+    } head
+    val cameraBytes: ByteVector = camera.data.data
+    val cfo = new FileOutputStream(new File("./camera"))
+    val csdnaReadable = cameraBytes.copyToStream(cfo)
+    val cfbh = camera.header
+    println(s"Camera FileBlockHeader: $cfbh")
+
+    val clengths = TypeResolver.fieldLength("", "cam", "Camera", typeMap)
+    clengths map { l => println(l.id,l.typeRef,l.length) }
+  }
 }
 /**
   * Created by mariusz on 8/21/16.
@@ -29,7 +105,7 @@ object Model {
 
     println("140:"+sdnaDecoded.types(sdnaDecoded.structureTypes(140).name)) // Scene
     println("30:"+sdnaDecoded.types(sdnaDecoded.structureTypes(30).name)) // Camera
-    val typeMap = TypeResolver.createStructMap(sdnaDecoded)
+    val typeMap: Map[String, Type] = TypeResolver.createStructMap(sdnaDecoded)
     typeMap filterKeys {
       //_ == "ID"
       _ == "Scene"
@@ -49,96 +125,14 @@ object Model {
 
     val heap: Map[Int, FileBlock] = blend.records map { fb => (fb.header.oldMemoryAddress, fb) } toMap
 
-    printScene(heap, blend, typeMap)
     //    println("----------------------")
     //
     //    import blender.Show._
     //    println(SceneTree.typeTree.drawTree)
 
-    new Model(blend,sdnaDecoded,heap)
+    new Model(blend,typeMap,heap)
   }
 
-  private def printScene(heap: Map[Int, FileBlock], blend: Blend, typeMap: Map[String,Type]): Unit = {
-    //    val sceneType = sdnaDecoded.structureTypes(scene.header.sdnaIndex)
-    //    val sceneTypeName = sdnaDecoded.types(sceneType.name)
-    //    val len = sdnaDecoded.lenghts(sceneType.name)
-    //
-    //    println(s"SceneType: $sceneTypeName" + s" length: $len")
-    //
-    //    sceneType.fields foreach {
-    //      f => println("Field(" + sdnaDecoded.names(f.fieldName) + ":" + sdnaDecoded.types(f.fieldType) + ") length: " + sdnaDecoded.lenghts(f.fieldType))
-    //    }
-    //
-    //    println("----------------------")
-    //    val typeTable = sceneType.fields map {
-    //      f =>
-    //        TypeProperties(
-    //          sdnaDecoded.names(f.fieldName),
-    //          sdnaDecoded.types(f.fieldType),
-    //          sdnaDecoded.lenghts(f.fieldType),
-    //          0
-    //        )
-    //    }
-    //    println(typeTable)
-    //    println("----------------------")
-    //
-    //    //printStructure(sdnaDecoded,"ID")
-    //
-    //    println(blender.Field(sdnaDecoded, "scene", "Scene"))
-    //    println("----------------------")
-
-
-
-    val scene: FileBlock = blend.records filter {
-      //_.header.code.startsWith("SC")
-      _.header.sdnaIndex == 140
-    } head
-    val sceneBytes: ByteVector = scene.data.data
-    val fo = new FileOutputStream(new File("./scene"))
-    val sdnaReadable = sceneBytes.copyToStream(fo)
-    val fbh = scene.header
-    println(s"Scene FileBlockHeader: $fbh")
-
-
-    // Camera: *Object: 0336c480  -    (minus ) 138933992 (0x847F6E8)
-    //    val cam0: FileBlock = heap(138933992)
-    val cam0: FileBlock = heap(0x0336c480)
-
-    val camera: FileBlock = blend.records filter {
-      //_.header.code.startsWith("SC")
-      _.header.sdnaIndex == 30
-    } head
-    val cameraBytes: ByteVector = camera.data.data
-    val cfo = new FileOutputStream(new File("./camera"))
-    val csdnaReadable = cameraBytes.copyToStream(cfo)
-    val cfbh = camera.header
-    println(s"Camera FileBlockHeader: $cfbh")
-
-    // println(TypeResolver.fieldLength("", "id", "ID", typeMap))
-    val lengths: Seq[FieldLength] = TypeResolver.fieldLength("", "sc", "Scene", typeMap)
-
-
-    // /*Fields: */ lengths map { l => println(l.id,l.typeRef,l.length) }
-
-    val clengths = TypeResolver.fieldLength("", "cam", "Camera", typeMap)
-    clengths map { l => println(l.id,l.typeRef,l.length) }
-
-
-    //println(lengths map {_.length})
-
-    //    def offsets(input: Seq[Int]): Seq(Int) = {
-    //
-    //    }
-    val offsets = (lengths map { _.length }).scanLeft(0)(_ + _)
-    //println(offsets)
-
-
-    //val b1 = blend flatMap { println }
-    //println(scene)
-
-    println("----------------------")
-    println("----------------------")
-  }
 
   def getSDNA(args: Array[String]): (Blend, StructureDNA) = {
     val parser = new Parser
